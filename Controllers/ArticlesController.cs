@@ -3,6 +3,8 @@ using Lab07.Services;
 using Lab07.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lab07.Controllers;
 
@@ -10,20 +12,20 @@ public class ArticlesController : Controller
 {
     private readonly IArticleService _articleService;
     private readonly ICategoryService _categoryService;
-    private readonly IUserService _userService;
     private readonly IWebHostEnvironment _env;
+    private readonly UserManager<ApplicationUser> _userManager;
 
     private const int PageSize = 5;
 
     public ArticlesController(
-        IArticleService articleService,
-        ICategoryService categoryService,
-        IUserService userService,
-        IWebHostEnvironment env)
+    IArticleService articleService,
+    ICategoryService categoryService,
+    UserManager<ApplicationUser> userManager,
+    IWebHostEnvironment env)
     {
         _articleService = articleService;
         _categoryService = categoryService;
-        _userService = userService;
+        _userManager = userManager;
         _env = env;
     }
 
@@ -45,7 +47,7 @@ public class ArticlesController : Controller
             Content = a.Content,
             PublishedAt = a.PublishedAt,
             CategoryName = a.Category?.Name ?? "N/A",
-            AuthorName = a.User?.Name ?? "N/A",
+            AuthorName = a.Author?.UserName ?? "N/A",
             ImagePath = a.ImagePath
         }).ToList();
 
@@ -72,7 +74,7 @@ public class ArticlesController : Controller
             Content = article.Content,
             PublishedAt = article.PublishedAt,
             CategoryName = article.Category?.Name ?? "N/A",
-            AuthorName = article.User?.Name ?? "N/A",
+            AuthorName = article.Author?.UserName ?? "N/A",
             ImagePath = article.ImagePath
         };
 
@@ -80,6 +82,7 @@ public class ArticlesController : Controller
     }
 
     // GET: /Articles/Create
+    [Authorize]
     public async Task<IActionResult> Create(CancellationToken cancellationToken)
     {
         var viewModel = new CreateArticleViewModel();
@@ -88,6 +91,7 @@ public class ArticlesController : Controller
     }
 
     // POST: /Articles/Create
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateArticleViewModel viewModel, CancellationToken cancellationToken)
@@ -98,12 +102,18 @@ public class ArticlesController : Controller
             return View(viewModel);
         }
 
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return Challenge();
+        }
+
         var article = new Article
         {
             Title = viewModel.Title,
             Content = viewModel.Content,
             CategoryId = viewModel.CategoryId,
-            UserId = viewModel.UserId
+            AuthorId = user.Id
         };
 
         if (viewModel.Upload != null)
@@ -120,6 +130,7 @@ public class ArticlesController : Controller
     }
 
     // GET: /Articles/Edit/5
+    [Authorize]
     public async Task<IActionResult> Edit(int? id, CancellationToken cancellationToken)
     {
         if (id == null)
@@ -135,7 +146,6 @@ public class ArticlesController : Controller
             Title = article.Title,
             Content = article.Content,
             CategoryId = article.CategoryId,
-            UserId = article.UserId,
             ExistingImagePath = article.ImagePath
         };
 
@@ -144,6 +154,7 @@ public class ArticlesController : Controller
     }
 
     // POST: /Articles/Edit/5
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, EditArticleViewModel viewModel, CancellationToken cancellationToken)
@@ -164,7 +175,6 @@ public class ArticlesController : Controller
         article.Title = viewModel.Title;
         article.Content = viewModel.Content;
         article.CategoryId = viewModel.CategoryId;
-        article.UserId = viewModel.UserId;
 
         if (viewModel.Upload != null)
         {
@@ -184,6 +194,7 @@ public class ArticlesController : Controller
     }
 
     // GET: /Articles/Delete/5
+    [Authorize]
     public async Task<IActionResult> Delete(int? id, CancellationToken cancellationToken)
     {
         if (id == null)
@@ -200,13 +211,14 @@ public class ArticlesController : Controller
             Content = article.Content,
             PublishedAt = article.PublishedAt,
             CategoryName = article.Category?.Name ?? "N/A",
-            AuthorName = article.User?.Name ?? "N/A"
+            AuthorName = article.Author?.UserName ?? "N/A"
         };
 
         return View(viewModel);
     }
 
     // POST: /Articles/Delete/5
+    [Authorize]
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id, CancellationToken cancellationToken)
@@ -220,11 +232,6 @@ public class ArticlesController : Controller
         var categories = await _categoryService.GetAllAsync(cancellationToken);
         viewModel.Categories = categories
             .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
-            .ToList();
-
-        var users = await _userService.GetAllAsync(cancellationToken);
-        viewModel.Users = users
-            .Select(u => new SelectListItem { Value = u.Id.ToString(), Text = u.Name })
             .ToList();
     }
 }

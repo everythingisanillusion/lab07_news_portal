@@ -1,3 +1,4 @@
+using Lab07.Models;
 using Lab07.Services;
 using Lab07.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -30,7 +31,7 @@ public class HomeController : Controller
                 Content = a.Content,
                 PublishedAt = a.PublishedAt,
                 CategoryName = a.Category?.Name ?? "N/A",
-                AuthorName = a.User?.Name ?? "N/A",
+                AuthorName = a.Author?.UserName ?? "N/A",
                 ImagePath = a.ImagePath
             }).ToList(),
             TotalArticles = totalArticles,
