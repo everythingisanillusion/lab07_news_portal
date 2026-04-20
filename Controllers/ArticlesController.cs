@@ -140,6 +140,11 @@ public class ArticlesController : Controller
         if (article == null)
             return NotFound();
 
+        if (!IsOwnerOrAdmin(article))
+        {
+            return Forbid();
+        }
+
         var viewModel = new EditArticleViewModel
         {
             Id = article.Id,
@@ -176,6 +181,11 @@ public class ArticlesController : Controller
         article.Content = viewModel.Content;
         article.CategoryId = viewModel.CategoryId;
 
+        if (!IsOwnerOrAdmin(article))
+        {
+            return Forbid();
+        }
+
         if (viewModel.Upload != null)
         {
             var fileName = Path.GetFileName(viewModel.Upload.FileName);
@@ -204,6 +214,11 @@ public class ArticlesController : Controller
         if (article == null)
             return NotFound();
 
+        if (!IsOwnerOrAdmin(article))
+        {
+            return Forbid();
+        }
+
         var viewModel = new ArticleViewModel
         {
             Id = article.Id,
@@ -223,9 +238,21 @@ public class ArticlesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id, CancellationToken cancellationToken)
     {
+        var article = await _articleService.GetByIdAsync(id, cancellationToken);
+        if (article == null)
+        {
+            return NotFound();
+        }
+
+        if (!IsOwnerOrAdmin(article))
+        {
+            return Forbid();
+        }
+
         await _articleService.DeleteAsync(id, cancellationToken);
         return RedirectToAction(nameof(Index));
     }
+ 
 
     private async Task LoadDropdownsAsync(CreateArticleViewModel viewModel, CancellationToken cancellationToken)
     {
@@ -233,5 +260,16 @@ public class ArticlesController : Controller
         viewModel.Categories = categories
             .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
             .ToList();
+    }
+
+    private bool IsOwnerOrAdmin(Article article)
+    {
+        if (User.IsInRole("Admin"))
+        {
+            return true;
+        }
+
+        var currentUserId = _userManager.GetUserId(User);
+        return article.AuthorId == currentUserId;
     }
 }

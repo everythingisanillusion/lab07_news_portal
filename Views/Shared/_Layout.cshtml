@@ -13,10 +13,15 @@
             <a class="navbar-brand" asp-controller="Home" asp-action="Index">
                 News Portal
             </a>
-            <div class="navbar-nav">
-                <a class="nav-link" asp-controller="Home" asp-action="Index">Acasă</a>
-                <a class="nav-link" asp-controller="Articles" asp-action="Index">Articole</a>
-                <a class="nav-link" asp-controller="Articles" asp-action="Create">Articol nou</a>
+
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <div class="navbar-nav">
+                    <a class="nav-link" asp-controller="Home" asp-action="Index">Acasă</a>
+                    <a class="nav-link" asp-controller="Articles" asp-action="Index">Articole</a>
+                    <a class="nav-link" asp-controller="Articles" asp-action="Create">Articol nou</a>
+                </div>
+
+                <partial name="_LoginPartial" />
             </div>
         </div>
     </nav>

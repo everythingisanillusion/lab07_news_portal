@@ -26,7 +26,6 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Services
 builder.Services.AddScoped<IArticleService, ArticleService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
-builder.Services.AddScoped<IUserService, UserService>();
 
 // MVC
 builder.Services.AddControllersWithViews();
@@ -38,6 +37,7 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     SeedData.Initialize(context);
+    await IdentitySeedData.InitializeAsync(scope.ServiceProvider);
 }
 
 // Configure pipeline

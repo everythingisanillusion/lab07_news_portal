@@ -39,12 +39,14 @@ else
                             @article.CategoryName — @article.AuthorName — @article.PublishedAt.ToShortDateString()
                         </small>
                         <div class="mt-2">
-                            <a asp-action="Details" asp-route-id="@article.Id"
-                               class="btn btn-sm btn-info">Detalii</a>
-                            <a asp-action="Edit" asp-route-id="@article.Id"
-                               class="btn btn-sm btn-warning">Editare</a>
-                            <a asp-action="Delete" asp-route-id="@article.Id"
-                               class="btn btn-sm btn-danger">Ștergere</a>
+                            <a asp-action="Details" asp-route-id="@article.Id" class="btn btn-sm btn-info">Detalii</a>
+
+                            @if (User.Identity != null && User.Identity.IsAuthenticated &&
+                                (User.IsInRole("Admin") || article.AuthorName == User.Identity.Name))
+                            {
+                                <a asp-action="Edit" asp-route-id="@article.Id" class="btn btn-sm btn-warning">Editare</a>
+                                <a asp-action="Delete" asp-route-id="@article.Id" class="btn btn-sm btn-danger">Ștergere</a>
+                            }
                         </div>
                     </div>
                 </div>
